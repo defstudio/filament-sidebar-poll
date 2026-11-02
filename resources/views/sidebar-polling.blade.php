@@ -1,1 +1,1 @@
-<div wire:poll.10s="refresh"></div>
+<div wire:poll.{{ $interval }}="refresh"></div>

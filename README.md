@@ -1,81 +1,100 @@
-# A polling setting to regularly update your Filament sidebar
+# Filament Sidebar Poll
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/defstudio/filament-sidebar-poll.svg?style=flat-square)](https://packagist.org/packages/defstudio/filament-sidebar-poll)
-[![GitHub Tests Action Status](https://img.shields.io/github/actions/workflow/status/defstudio/filament-sidebar-poll/run-tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/defstudio/filament-sidebar-poll/actions?query=workflow%3Arun-tests+branch%3Amain)
-[![GitHub Code Style Action Status](https://img.shields.io/github/actions/workflow/status/defstudio/filament-sidebar-poll/fix-php-code-style-issues.yml?branch=main&label=code%20style&style=flat-square)](https://github.com/defstudio/filament-sidebar-poll/actions?query=workflow%3A"Fix+PHP+code+styling"+branch%3Amain)
-[![Total Downloads](https://img.shields.io/packagist/dt/defstudio/filament-sidebar-poll.svg?style=flat-square)](https://packagist.org/packages/defstudio/filament-sidebar-poll)
+[![Tests](https://img.shields.io/github/actions/workflow/status/defstudio/filament-sidebar-poll/tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/defstudio/filament-sidebar-poll/actions/workflows/tests.yml)
 
+Automatically refresh your Filament sidebar so navigation badges and other dynamic navigation content stay up to date. Uses Filament's existing Livewire sidebar, with a default polling interval of 10 seconds.
 
+## Requirements
 
-This is where your description should go. Limit it to a paragraph or two. Consider adding a small example.
+- PHP 8.2 or later
+- Filament 5
+- Laravel 11, 12, or 13 (Laravel 13 requires PHP 8.3 or later)
 
 ## Installation
-
-You can install the package via composer:
 
 ```bash
 composer require defstudio/filament-sidebar-poll
 ```
 
-> [!IMPORTANT]
-> If you have not set up a custom theme and are using Filament Panels follow the instructions in the [Filament Docs](https://filamentphp.com/docs/4.x/styling/overview#creating-a-custom-theme) first.
+Register the plugin in each panel that should poll:
 
-After setting up a custom theme add the plugin's views to your theme css file or your app's css file if using the standalone packages.
+```php
+use DefStudio\FilamentSidebarPoll\SidebarPoll;
+use Filament\Panel;
 
-```css
-@source '../../../../vendor/defstudio/filament-sidebar-poll/resources/**/*.blade.php';
+public function panel(Panel $panel): Panel
+{
+    return $panel
+        // Your existing panel configuration...
+        ->plugin(SidebarPoll::make());
+}
 ```
 
-You can publish and run the migrations with:
+No migrations, assets, custom theme, or build steps are required.
 
-```bash
-php artisan vendor:publish --tag="filament-sidebar-poll-migrations"
-php artisan migrate
+## Configuration
+
+Override the interval for an individual panel:
+
+```php
+SidebarPoll::make()->pollingInterval('30s')
 ```
 
-You can publish the config file with:
+Intervals must be positive integers followed by `ms`, `s`, or `m`, for example `500ms`, `30s`, or `1m`. Invalid intervals throw an `InvalidArgumentException`.
+
+To change the default for all panels, publish the configuration:
 
 ```bash
 php artisan vendor:publish --tag="filament-sidebar-poll-config"
 ```
 
-Optionally, you can publish the views using
+This creates `config/sidebar-poll.php`:
+
+```php
+return [
+    'interval' => '10s',
+];
+```
+
+Per-panel settings take precedence over the configuration file. After changing configuration in production, rebuild your application's configuration cache.
+
+Optionally publish the view:
 
 ```bash
 php artisan vendor:publish --tag="filament-sidebar-poll-views"
 ```
 
-This is the contents of the published config file:
+## Production considerations
 
-```php
-return [
-];
-```
+Each open sidebar makes approximately one request per interval. Prefer longer intervals when navigation badge queries are expensive or many users are connected. Livewire automatically reduces polling in background tabs; this plugin preserves that behavior. See the [Livewire polling documentation](https://livewire.laravel.com/docs/4.x/wire-poll).
 
-## Usage
+Use closures for dynamic navigation values so they are recalculated when the sidebar renders. Values cached by your application retain that cache's lifetime.
 
-```php
-$filamentSidebarPoll = new DefStudio\FilamentSidebarPoll();
-echo $filamentSidebarPoll->echoPhrase('Hello, DefStudio!');
-```
+Polling applies to the sidebar. Panels using top navigation do not have a sidebar to refresh.
 
-## Testing
+## Development
 
 ```bash
+composer install
 composer test
+composer analyse
+composer test:lint
 ```
+
+The integration tests render Filament's real sidebar and call its Livewire refresh action, including a changing navigation badge. Browser timers and production load require validation in the consuming application.
 
 ## Changelog
 
-Please see [CHANGELOG](CHANGELOG.md) for more information on what has changed recently.
+See [CHANGELOG](CHANGELOG.md).
 
 ## Contributing
 
-Please see [CONTRIBUTING](.github/CONTRIBUTING.md) for details.
+See [CONTRIBUTING](.github/CONTRIBUTING.md).
 
-## Security Vulnerabilities
+## Security
 
-Please review [our security policy](.github/SECURITY.md) on how to report security vulnerabilities.
+See [our security policy](.github/SECURITY.md).
 
 ## Credits
 
@@ -84,4 +103,4 @@ Please review [our security policy](.github/SECURITY.md) on how to report securi
 
 ## License
 
-The MIT License (MIT). Please see [License File](LICENSE.md) for more information.
+MIT. See [LICENSE](LICENSE.md).

@@ -1,6 +1,5 @@
 <?php
 
-// config for DefStudio/FilamentSidebarPoll
 return [
-
+    'interval' => '10s',
 ];
